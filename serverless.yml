@@ -1,0 +1,27 @@
+service: minionbot
+app: minionbot
+tenant: vwooosh
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  #iamRoleStatements: #O que essas funções podem fazer
+  #  - Effect: Allow #Permite algumas coisas (para restringir, usar Restrict)
+  #    Action:
+  #      - s3:GetObject
+  #      - s3:PutObject
+  #    Resource:
+  #      -"arn:aws:s3:::*" # * para todos os lugares do s3
+
+functions:
+  hello:
+    handler: handler.handle
+    #environment:
+     # bucket: minionbot
+    events: #Quais eventos ele vai ouvir
+      - http:
+          path: handler/handler
+          method: post
+     # - s3:
+      #    bucket: minionbot
+       #   event: s3:ObjectCreated:* #Quando qualquer arquivo for criado
