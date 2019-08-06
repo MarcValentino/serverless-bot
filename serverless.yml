@@ -17,7 +17,7 @@ provider:
 
 functions:
   hello:
-    handler: handler.handle
+    handler: handler.handler
     layers:
       - {Ref: LibsLambdaLayer}
     
@@ -25,7 +25,7 @@ functions:
       #bucket: minionbot
     events: #Quais eventos ele vai ouvir
       - http:
-          path: handler/handle
+          path: /
           method: post
           cors: true
 

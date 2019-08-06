@@ -1,38 +1,19 @@
 'use strict';
 //const awsServerlessExpress = require('aws-serverless-express');
-//const app = require('./app');
-const express = require('express');
+const app = require('./app');
+//const express = require('express');
 const serverless = require('serverless-http');
-const {WebhookClient, Suggestion} = require('dialogflow-fulfillment');
+//const {WebhookClient, Suggestion} = require('dialogflow-fulfillment');
 //const bodyParser = require('body-parser');
-
-const app = express();
+//const server = awsServerlessExpress.createServer(app);
+//const app = express();
 //expressApp.use(bodyParser.json);
 //expressApp.post('/handle', )
-//module.exports.handle = serverless(expressApp)
+//module.exports.handle = serverless(app);
 
-function minionWelcome(agent) {
-  agent.add(`Bem vindo à loja de minions!`);
-}
-   
-function fallback(agent) {
-  agent.add(`I didn't understand`);
-  agent.add(`I'm sorry, can you try again?`);
-}
 
-app.get('/', function(req, res) {
-  const agent = new WebhookClient({req, res});
-  console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
-  console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
+module.exports.handler = serverless(app);
 
-// Run the proper function handler based on the matched Dialogflow intent name
-  let intentMap = new Map();
-  intentMap.set('minionSaleStart', minionWelcome);
-  intentMap.set('Default Fallback Intent', fallback);
-  agent.handleRequest(intentMap);
-});
-
-module.exports.handle = (event) => serverless(app); 
   //const app = express();
 
   
