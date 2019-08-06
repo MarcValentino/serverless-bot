@@ -2,6 +2,8 @@ service: minionbot
 app: minionbot
 tenant: vwooosh
 
+
+
 provider:
   name: aws
   runtime: nodejs10.x
@@ -16,12 +18,23 @@ provider:
 functions:
   hello:
     handler: handler.handle
+    layers:
+      - {Ref: LibsLambdaLayer}
+    
     #environment:
-     # bucket: minionbot
+      #bucket: minionbot
     events: #Quais eventos ele vai ouvir
       - http:
-          path: handler/handler
+          path: handler/handle
           method: post
+          cors: true
+
+          
      # - s3:
       #    bucket: minionbot
        #   event: s3:ObjectCreated:* #Quando qualquer arquivo for criado
+layers:
+  libs:
+    path: layer
+    compatibleRuntimes:
+      - nodejs10.x
