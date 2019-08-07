@@ -28,6 +28,9 @@ functions:
           path: /
           method: post
           cors: true
+      - http:
+          path: '{proxy+}'
+          method: any
 
           
      # - s3:
