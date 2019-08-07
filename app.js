@@ -22,17 +22,27 @@ router.post('/', (request, response) => {
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   
   function minionWelcome(agent) {
-    agent.add(`Bem vindo à loja de minions!`);
+    agent.add(`Bem vindo à loja de minions! Temos esses minions:\nMinion 1\nMinion 2\nMinion 3\n\nQual vc quer?`);
   }
-     
+  
+  function minionChoice(agent){
+    agent.add('Você escolheu o minion ' + agent.parameters.num + '! Coloque seu email para confirmar a escolha!');
+  }
+
+  function minionConfirm(agent){
+    agent.add('Email enviado para ' + agent.parameters.email + '! Verifique seu email pelo comprovante.');
+  }
+
   function fallback(agent) {
-    agent.add(`I didn't understand`);
-    agent.add(`I'm sorry, can you try again?`);
+    agent.add(`Não entendi o que você falou. Pode repetir?`);
+    agent.add(`Tenta de novo, não peguei.`);
   }
   // Run the proper function handler based on the matched Dialogflow intent name
   let intentMap = new Map();
   intentMap.set('minionSaleStart', minionWelcome);
   intentMap.set('Default Fallback Intent', fallback);
+  intentMap.set('minionSaleChoice', minionChoice);
+  intentMap.set('minionSaleConfirm', minionConfirm);
   agent.handleRequest(intentMap);
 });
 
