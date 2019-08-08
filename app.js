@@ -17,23 +17,8 @@ router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(awsServerlessExpressMiddleware.eventContext());
 
-/*var minionArray = [
-  {
-    num: 1,
-    price: 10
-  },
-  {
-    num: 2,
-    price: 15
-  },
-  {
-    num: 3,
-    price: 20
-  }
-];
 
-var chosenMinion = minionArray.minions[0];
-*/
+
 router.post('/', (request, response) => {
   
 
@@ -48,19 +33,22 @@ router.post('/', (request, response) => {
   
   function minionChoice(agent){
     agent.add('Você escolheu o minion ' + agent.parameters.num + '! Coloque seu email para confirmar a escolha!');
-    /*for(i=0;i<minionArray.length;i++){
-      if(agent.parameters.num == minionArray[i].num){
-        chosenMinion = minionArray[i];
-      } 
-    }*/
   }
 
   
 
   async function minionConfirm(agent) {
+    let userChoice = agent.parameters.num;
+
+    let lista = {
+      1: {nome: "Stuart", preco: "10"},
+      2: {nome: "Kevin", preco: "15"},
+      3: {nome: "Pablo", preco: "20"}
+    };
+
     AWS.config.update({
-      accessKeyId: 'AKIATLDCCZSVGSTMRJFQ',
-      secretAccessKey: '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',
+      accessKeyId: 'AKIATLDCCZSVEYBRKHHG',
+      secretAccessKey: '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',
       region: 'us-east-1'
     });
     
@@ -74,13 +62,13 @@ router.post('/', (request, response) => {
       },
       Message: { 
         Body: { /* required */
-          Html: {
+          /*Html: {
            Charset: "UTF-8",
-           Data: `<p>Olá!\nEsse é o recibo da sua compra na loja de minions! Segue aqui a informação da compra:\n\nMinion comprado: Minion " + "1" + "\nPreço: " + "10,00" + "\n\nAgradecemos pela compra!\n</p>`
-          },
+           Data: `<p>Obrigado pela compra na loja de minions! Os dados da sua compra estão aqui:</p><p id="output"></p><script></script> <p>Volte sempre!</p>`
+          },*/
           Text: {
            Charset: "UTF-8",
-           Data: "Olá!\nEsse é o recibo da sua compra na loja de minions! Segue aqui a informação da compra:\n\nMinion comprado: Minion " + "1" + "\nPreço: " + "10,00" + "\n\nAgradecemos pela compra!" 
+           Data: "Obrigado pela compra na loja de minions! \n\nVolte sempre!" 
           }
          },
          Subject: {
