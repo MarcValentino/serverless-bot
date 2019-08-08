@@ -9,28 +9,7 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const app = express();
 const router = express.Router();
 
-var minionArray = {
-  minions: [
-    {
-      num: 1,
-      price: 10
-    },
-    {
-      num: 2,
-      price: 15
-    },
-    {
-      num: 3,
-      price: 20
-    }
-  ]
-};
-
-var chosenMinion = minionArray.minions[0];
-
 var AWS = require('aws-sdk');
-
-var ses = new AWS.SES({region: 'us-east-1'});
 
 router.use(compression());
 router.use(cors());
@@ -38,7 +17,26 @@ router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(awsServerlessExpressMiddleware.eventContext());
 
+/*var minionArray = [
+  {
+    num: 1,
+    price: 10
+  },
+  {
+    num: 2,
+    price: 15
+  },
+  {
+    num: 3,
+    price: 20
+  }
+];
+
+var chosenMinion = minionArray.minions[0];
+*/
 router.post('/', (request, response) => {
+  
+
   const agent = new WebhookClient({request, response});
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
@@ -47,16 +45,27 @@ router.post('/', (request, response) => {
     agent.add(`Bem vindo à loja de minions! Temos esses minions:\n\nMinion 1 - R$10,00\nMinion 2 - R$15,00\nMinion 3 - R$20,00\n\nQual vc quer?`);
   }
   
+  
   function minionChoice(agent){
     agent.add('Você escolheu o minion ' + agent.parameters.num + '! Coloque seu email para confirmar a escolha!');
-    //for(i=0;i<minionArray.minions.length;i++){
-      //if(agent.parameters.num == minionArray.minions[i].num){
-        //chosenMinion = minionArray.minions[i];
-      //} 
-    //}
+    /*for(i=0;i<minionArray.length;i++){
+      if(agent.parameters.num == minionArray[i].num){
+        chosenMinion = minionArray[i];
+      } 
+    }*/
   }
 
-  function minionConfirm(agent){
+  
+
+  async function minionConfirm(agent) {
+    AWS.config.update({
+      accessKeyId: 'AKIATLDCCZSVGSTMRJFQ',
+      secretAccessKey: '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',
+      region: 'us-east-1'
+    });
+    
+    var ses = new AWS.SES({apiVersion: "2010-12-01"});
+    
     var params = {
       Destination: { 
         ToAddresses: [
@@ -67,7 +76,7 @@ router.post('/', (request, response) => {
         Body: { /* required */
           Html: {
            Charset: "UTF-8",
-           Data: ""
+           Data: `<p>Olá!\nEsse é o recibo da sua compra na loja de minions! Segue aqui a informação da compra:\n\nMinion comprado: Minion " + "1" + "\nPreço: " + "10,00" + "\n\nAgradecemos pela compra!\n</p>`
           },
           Text: {
            Charset: "UTF-8",
@@ -79,11 +88,11 @@ router.post('/', (request, response) => {
           Data: 'Loja de Minions - Compra efetuada com sucesso!'
          }
         },
-      Source: 'marcelovalentino99@gmail.com', /* required */
+      Source: "marcelovalentino99@gmail.com", /* required */
       
     };
     var sendPromise = ses.sendEmail(params).promise();
-    sendPromise.then(
+    await sendPromise.then(
       function(data){
         console.log(data);
         agent.add('Email enviado para ' + agent.parameters.email + '! Verifique seu email pelo comprovante.');
