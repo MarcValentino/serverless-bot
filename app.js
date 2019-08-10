@@ -9,6 +9,9 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const app = express();
 const router = express.Router();
 
+var database = require('./database');
+var sequelize = database.sequelize;
+
 var AWS = require('aws-sdk');
 
 router.use(compression());
@@ -32,20 +35,19 @@ router.post('/', (request, response) => {
   
   
   function minionChoice(agent){
-    agent.add('Você escolheu o minion ' + agent.parameters.num + '! Coloque seu email para confirmar a escolha!');
+    if(agent.parameters.num > 3 || agent.parameters.num < 1) agent.end('Escolha inválida!'); 
+    else agent.add('Você escolheu o minion ' + agent.parameters.num + '! Coloque seu email para confirmar a escolha!');
   }
 
-  
-
   async function minionConfirm(agent) {
-    let userChoice = agent.parameters.num;
 
-    let lista = {
-      1: {nome: "Stuart", preco: "10"},
-      2: {nome: "Kevin", preco: "15"},
-      3: {nome: "Pablo", preco: "20"}
-    };
-
+    let context = await agent.request_.body.queryResult.outputContexts[0].parameters;
+    //console.log(user);
+    let minions = {
+      1: {"nome" : "Stuart", "preco" : 10 },
+      2: {"nome": "Dave", "preco": 15},
+      3: {"nome": "Pablo", "preco": 20}
+    }
     AWS.config.update({
       accessKeyId: 'AKIATLDCCZSVEYBRKHHG',
       secretAccessKey: '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',
@@ -68,7 +70,7 @@ router.post('/', (request, response) => {
           },*/
           Text: {
            Charset: "UTF-8",
-           Data: "Obrigado pela compra na loja de minions! \n\nVolte sempre!" 
+           Data: "Obrigado pela compra na loja de minions! Aqui está o seu recibo: \n\nNúmero: "+ context.num+ "\nNome: "+minions[context.num].nome+"\nPreço: R$"+minions[context.num].preco +",00 \n\nVolte sempre!" 
           }
          },
          Subject: {

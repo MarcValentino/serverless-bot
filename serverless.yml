@@ -2,11 +2,23 @@ service: minionbot
 app: minionbot
 tenant: vwooosh
 
-
-
 provider:
   name: aws
   runtime: nodejs10.x
+  #region: us-east-1
+  #vpc:
+  #  securityGroupIds:
+  #    - sg-060b5154862e29bad 
+  #  subnetIds:
+  #    - subnet-36163418
+  #    - subnet-3d071e32
+  #    - subnet-56b1da68
+  #environment:
+  #  MYSQLHOST: 'botdb.cluster-cksrhumlppv3.us-east-1.rds.amazonaws.com'
+  #  MYSQLPORT: '3306'
+  #  MYSQLUSER: 'botAdmin'
+  #  MYSQLPASS: 'Marc06021999'
+  #  MYSQLDATABASE: 'botdb'
   #iamRoleStatements: #O que essas funções podem fazer
   #  - Effect: Allow #Permite algumas coisas (para restringir, usar Restrict)
   #    Action:
@@ -27,10 +39,7 @@ functions:
       - http:
           path: /
           method: post
-          cors: true
-      
-
-          
+          cors: true        
      # - s3:
       #    bucket: minionbot
        #   event: s3:ObjectCreated:* #Quando qualquer arquivo for criado
