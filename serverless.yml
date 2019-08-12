@@ -7,85 +7,30 @@ provider:
   runtime: nodejs10.x
   region: us-east-1
   stage: dev
-  environment:
-    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan  
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-east-1:229986454698:table"
-
-  #iamRoleStatements: #O que essas funções podem fazer
-  #  - Effect: Allow #Permite algumas coisas (para restringir, usar Restrict)
-  #    Action:
-  #      - "ec2:CreateNetworkInterface"
-  #      - "ec2:DescribeNetworkInterfaces"
-  #      - "ec2:DeleteNetworkInterface"
-  #    Resource: "*" # * para todos os lugares do s3
-
+  
 functions:
-  hello:
+  handler:
     handler: handler.handler
     layers:
       - {Ref: LibsLambdaLayer}
     
-    #environment:
-      #bucket: minionbot
     events: #Quais eventos ele vai ouvir
       - http:
           path: /
           method: post
           cors: true        
-     # - s3:
-      #    bucket: minionbot
-       #   event: s3:ObjectCreated:* #Quando qualquer arquivo for criado
-
-  #getAllMinions:
-  #  handler: handler.getAllMinions
-  #  layers:
-  #    - {Ref: LibsLambdaLayer}
-  #  events:
-  #    - http:
-  #        path: minion
-  #        method: get
-  #        cors: true
-  #
-  #getOneMinion:
-  #  handler: handler.getOneMinion
-  #  layers:
-  #    - {Ref: LibsLambdaLayer}
-  #  events:
-  #    - http:
-  #        path: minion/{id}
-  #        method: get
-  #        cors: true
-  #
-  #createPurchase:
-  #  handler: handler.createPurchase
-  #  layers:
-  #    - {Ref: LibsLambdaLayer}
-  #  events:
-  #    - http:
-  #        path: purchase
-  #        method: post
-  #        cors: true
-  #
-  #createMinion:
-  #  handler: handler.createMinion
-  #  layers:
-  #    - {Ref: LibsLambdaLayer}
-  #  events:
-  #    - http:
-  #        path: minion
-  #        method: post
-  #        cors: true
-#
-#
+     
+  
+  testBd:
+    handler: handler.getAllMinions
+    layers:
+      - {Ref: LibsLambdaLayer}
+    events:
+      - http:
+          path: minions
+          method: get
+          cors: true
+  
 layers:
   libs:
     path: layer
@@ -94,3 +39,4 @@ layers:
 
 plugins:
   - serverless-dynamodb-local
+  - serverless-plugin-include-dependencies

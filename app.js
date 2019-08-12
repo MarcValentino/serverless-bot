@@ -9,8 +9,9 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const app = express();
 const router = express.Router();
 
-
 var AWS = require('aws-sdk');
+
+const dynamo = new AWS.DynamoDB();
 
 
 router.use(compression());
@@ -21,24 +22,25 @@ router.use(awsServerlessExpressMiddleware.eventContext());
 
 router.post('/', (request, response) => {
   
-
+  
   const agent = new WebhookClient({request, response});
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   
-  async function minionWelcome(agent) {
-    var dynamo = new AWS.DynamoDB.DocumentClient();
+  function minionWelcome(agent) {
+    
+    
     let params = {
-      TableName: 'minions',
-
+      TableName: 'minions'
     }
-    await dynamo.scan(params, function(err, data){
+    // Tentativa de pegar uma tabela já existente no dynamodb
+    dynamo.scan(params, function(err, data){
       if(err) agent.end("Erro resgatando os minions disponíveis!");
       else{
         let minionArray = data.Items;
         let stringResponse = "";
         for(i=0;i<minionArray.length;i++){
-          stringResponse += "Número: "+(i+1)+"\nNome: " + minionArray[i].name + "\n" + "Preço: R$" + minionArray[i].price + ",00\n\n";
+          stringResponse += "Número: "+(i+1)+"\nNome: " + minionArray[i].name.S + "\n" + "Preço: R$" + minionArray[i].price.N + ",00\n\n";
         }
         agent.add("Bem vindo à loja de minions! Temos esses minions disponíveis: \n" + stringResponse + "Qual você quer?");
       }
@@ -53,6 +55,11 @@ router.post('/', (request, response) => {
   }
 
   async function minionConfirm(agent) {
+    AWS.config.update({
+      accessKeyId: 'AKIATLDCCZSVEYBRKHHG',
+      secretAccessKey: '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',
+      region: 'us-east-1'
+    });
 
     let context = await agent.request_.body.queryResult.outputContexts[0].parameters;
     //console.log(user);
@@ -61,11 +68,7 @@ router.post('/', (request, response) => {
       2: {"nome": "Dave", "preco": 15},
       3: {"nome": "Pablo", "preco": 20}
     }
-    AWS.config.update({
-      accessKeyId: 'AKIATLDCCZSVEYBRKHHG',
-      secretAccessKey: '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',
-      region: 'us-east-1'
-    });
+    
     
     var ses = new AWS.SES({apiVersion: "2010-12-01"});
     
