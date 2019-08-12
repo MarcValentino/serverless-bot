@@ -9,18 +9,15 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const app = express();
 const router = express.Router();
 
-var database = require('./database');
-var sequelize = database.sequelize;
 
 var AWS = require('aws-sdk');
+
 
 router.use(compression());
 router.use(cors());
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(awsServerlessExpressMiddleware.eventContext());
-
-
 
 router.post('/', (request, response) => {
   
@@ -29,8 +26,24 @@ router.post('/', (request, response) => {
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   
-  function minionWelcome(agent) {
-    agent.add(`Bem vindo à loja de minions! Temos esses minions:\n\nMinion 1 - R$10,00\nMinion 2 - R$15,00\nMinion 3 - R$20,00\n\nQual vc quer?`);
+  async function minionWelcome(agent) {
+    var dynamo = new AWS.DynamoDB.DocumentClient();
+    let params = {
+      TableName: 'minions',
+
+    }
+    await dynamo.scan(params, function(err, data){
+      if(err) agent.end("Erro resgatando os minions disponíveis!");
+      else{
+        let minionArray = data.Items;
+        let stringResponse = "";
+        for(i=0;i<minionArray.length;i++){
+          stringResponse += "Número: "+(i+1)+"\nNome: " + minionArray[i].name + "\n" + "Preço: R$" + minionArray[i].price + ",00\n\n";
+        }
+        agent.add("Bem vindo à loja de minions! Temos esses minions disponíveis: \n" + stringResponse + "Qual você quer?");
+      }
+    });
+    
   }
   
   

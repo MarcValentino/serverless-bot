@@ -1,11 +1,4 @@
-'use strict';
-
-const app = require('./app');
-const serverless = require('serverless-http');
-var database = require('./database/database');
-
-
-module.exports.handler = serverless(app);
+var database = require('database');
 
 module.exports.getAllMinions = async () => {
     try{
@@ -28,7 +21,7 @@ module.exports.getOneMinion = async (event) => {
     try {
       const { Minion } = await database();
       const minion = await Minion.findById(event.pathParameters.id)
-      if (!minion) throw new HTTPError(404, `Minion com id: ${event.pathParameters.id} não encontrado.`)
+      if (!note) throw new HTTPError(404, `Minion com id: ${event.pathParameters.id} não encontrado.`)
       return {
         statusCode: 200,
         body: JSON.stringify(note)
@@ -62,7 +55,7 @@ module.exports.getOneMinion = async (event) => {
   module.exports.createMinion = async (event) => {
     try {
         const { Minion } = await database();
-        const minion = await Minion.create(JSON.parse(event.body));
+        const minion = await Minion.create(JSON.parse(event.body))
         return {
           statusCode: 200,
           body: JSON.stringify(minion)

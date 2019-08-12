@@ -5,27 +5,28 @@ tenant: vwooosh
 provider:
   name: aws
   runtime: nodejs10.x
-  #region: us-east-1
-  #vpc:
-  #  securityGroupIds:
-  #    - sg-060b5154862e29bad 
-  #  subnetIds:
-  #    - subnet-36163418
-  #    - subnet-3d071e32
-  #    - subnet-56b1da68
-  #environment:
-  #  MYSQLHOST: 'botdb.cluster-cksrhumlppv3.us-east-1.rds.amazonaws.com'
-  #  MYSQLPORT: '3306'
-  #  MYSQLUSER: 'botAdmin'
-  #  MYSQLPASS: 'Marc06021999'
-  #  MYSQLDATABASE: 'botdb'
+  region: us-east-1
+  stage: dev
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan  
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-east-1:229986454698:table"
+
   #iamRoleStatements: #O que essas funções podem fazer
   #  - Effect: Allow #Permite algumas coisas (para restringir, usar Restrict)
   #    Action:
-  #      - s3:GetObject
-  #      - s3:PutObject
-  #    Resource:
-  #      -"arn:aws:s3:::*" # * para todos os lugares do s3
+  #      - "ec2:CreateNetworkInterface"
+  #      - "ec2:DescribeNetworkInterfaces"
+  #      - "ec2:DeleteNetworkInterface"
+  #    Resource: "*" # * para todos os lugares do s3
 
 functions:
   hello:
@@ -43,8 +44,53 @@ functions:
      # - s3:
       #    bucket: minionbot
        #   event: s3:ObjectCreated:* #Quando qualquer arquivo for criado
+
+  #getAllMinions:
+  #  handler: handler.getAllMinions
+  #  layers:
+  #    - {Ref: LibsLambdaLayer}
+  #  events:
+  #    - http:
+  #        path: minion
+  #        method: get
+  #        cors: true
+  #
+  #getOneMinion:
+  #  handler: handler.getOneMinion
+  #  layers:
+  #    - {Ref: LibsLambdaLayer}
+  #  events:
+  #    - http:
+  #        path: minion/{id}
+  #        method: get
+  #        cors: true
+  #
+  #createPurchase:
+  #  handler: handler.createPurchase
+  #  layers:
+  #    - {Ref: LibsLambdaLayer}
+  #  events:
+  #    - http:
+  #        path: purchase
+  #        method: post
+  #        cors: true
+  #
+  #createMinion:
+  #  handler: handler.createMinion
+  #  layers:
+  #    - {Ref: LibsLambdaLayer}
+  #  events:
+  #    - http:
+  #        path: minion
+  #        method: post
+  #        cors: true
+#
+#
 layers:
   libs:
     path: layer
     compatibleRuntimes:
       - nodejs10.x
+
+plugins:
+  - serverless-dynamodb-local
