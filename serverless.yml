@@ -19,18 +19,7 @@ functions:
           path: /
           method: post
           cors: true        
-     
-  
-  testBd:
-    handler: handler.getAllMinions
-    layers:
-      - {Ref: LibsLambdaLayer}
-    events:
-      - http:
-          path: minions
-          method: get
-          cors: true
-  
+
 layers:
   libs:
     path: layer
