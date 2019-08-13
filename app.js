@@ -33,18 +33,24 @@ router.post('/', (request, response) => {
     let params = {
       TableName: 'minions'
     }
+    
     // Tentativa de pegar uma tabela já existente no dynamodb
     dynamo.scan(params, function(err, data){
-      if(err) agent.end("Erro resgatando os minions disponíveis!");
-      else{
-        let minionArray = data.Items;
+      //if(err) agent.end("Erro resgatando os minions disponíveis!");
+      //else{
+        /*let minionArray = data.Items;
         let stringResponse = "";
         for(i=0;i<minionArray.length;i++){
           stringResponse += "Número: "+(i+1)+"\nNome: " + minionArray[i].name.S + "\n" + "Preço: R$" + minionArray[i].price.N + ",00\n\n";
         }
         agent.add("Bem vindo à loja de minions! Temos esses minions disponíveis: \n" + stringResponse + "Qual você quer?");
-      }
+      */
+        console.log('data :' +data);
+        //agent.add(data);
+      //}
     });
+    agent.add("Bem vindo à loja de minions! Temos esses minions disponíveis: \n");
+    
     
   }
   

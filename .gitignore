@@ -5,5 +5,6 @@ jspm_packages
 # Serverless directories
 .serverless
 
-#important shit
+#important things
 secrets.json
+.vscode
