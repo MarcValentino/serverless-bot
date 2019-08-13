@@ -9,8 +9,16 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const app = express();
 const router = express.Router();
 
-
 var AWS = require('aws-sdk');
+
+AWS.config.update({
+  accessKeyId: 'AKIATLDCCZSVEYBRKHHG',
+  secretAccessKey: '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',
+  region: 'us-east-1'
+});
+
+const dynamo = new AWS.DynamoDB();
+
 
 router.use(compression());
 router.use(cors());
@@ -22,81 +30,121 @@ router.use(awsServerlessExpressMiddleware.eventContext());
 
 router.post('/', (request, response) => {
   
-
-  const agent = new WebhookClient({request, response});
+  var agent = new WebhookClient({request, response});
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   
-  function minionWelcome(agent) {
-    agent.add(`Bem vindo à loja de minions! Temos esses minions:\n\nMinion 1 - R$10,00\nMinion 2 - R$15,00\nMinion 3 - R$20,00\n\nQual vc quer?`);
+  async function minionWelcome(agent) {
+    
+    
+    let params = {
+      TableName: 'minions'
+    }
+    let scan = dynamo.scan(params).promise(); 
+    await scan.then(
+      function(data){
+        console.log("Vaaai\n");
+        
+        let stringResponse = "";
+        for(let i = 0;i<data.Items.length;i++){
+          stringResponse += "Num: " + data.Items[i].id.N + "\nNome: " + data.Items[i].name.S + "\nPreço: " + data.Items[i].price.N + "\n\n";
+          
+        }
+        agent.add("Bem vindo à loja de minions! Temos esses minions:\n\n" + stringResponse + "\nQual você quer?");
+        console.log("sucesso!\n" + stringResponse);
+      }
+    ).catch(
+      function(err){
+        agent.add("Erro no BD!");
+        console.log("Erro!\n" + err);
+      }
+    );
   }
   
   
-  function minionChoice(agent){
-    if(agent.parameters.num > 3 || agent.parameters.num < 1) agent.end('Escolha inválida!'); 
-    else agent.add('Você escolheu o minion ' + agent.parameters.num + '! Coloque seu email para confirmar a escolha!');
+  async function minionChoice(agent){
+    let params = {
+      Key:{
+        id : {N: "" +agent.parameters.num}
+      },
+      TableName: 'minions'
+    }
+    let get = dynamo.getItem(params).promise(); 
+    await get.then(
+      function(data){
+        agent.add("Você escolheu o minion n° " + data.Item.id.N + ", o " + data.Item.name.S + "! Coloque o seu email para confirmar a compra!");
+      }
+    ).catch(
+      function(err){
+        console.log("erro:\n"+err);
+        agent.end("Escolha inválida! Escolha um número dentro das opções!");
+      }
+    );
   }
 
   async function minionConfirm(agent) {
-
-    let context = await agent.request_.body.queryResult.outputContexts[0].parameters;
-    //console.log(user);
-    let minions = {
-      1: {"nome" : "Stuart", "preco" : 10 },
-      2: {"nome": "Dave", "preco": 15},
-      3: {"nome": "Pablo", "preco": 20}
-    }
-    AWS.config.update({
-      accessKeyId: 'AKIATLDCCZSVEYBRKHHG',
-      secretAccessKey: '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',
-      region: 'us-east-1'
-    });
     
-    var ses = new AWS.SES({apiVersion: "2010-12-01"});
-    
-    var params = {
-      Destination: { 
-        ToAddresses: [
-          agent.parameters.email,
-        ]
+    var userChoice = await agent.request_.body.queryResult.outputContexts[0].parameters;
+    let paramsMinion = {
+      Key:{
+        id : {N: "" + userChoice.num }
       },
-      Message: { 
-        Body: { /* required */
-          /*Html: {
-           Charset: "UTF-8",
-           Data: `<p>Obrigado pela compra na loja de minions! Os dados da sua compra estão aqui:</p><p id="output"></p><script></script> <p>Volte sempre!</p>`
-          },*/
-          Text: {
-           Charset: "UTF-8",
-           Data: "Obrigado pela compra na loja de minions! Aqui está o seu recibo: \n\nNúmero: "+ context.num+ "\nNome: "+minions[context.num].nome+"\nPreço: R$"+minions[context.num].preco +",00 \n\nVolte sempre!" 
+      TableName: 'minions'
+    }
+    var ses = new AWS.SES({apiVersion: "2010-12-01"});
+
+    let get = dynamo.getItem(paramsMinion).promise(); 
+    await get.then(
+      async function(data){
+        var emailParams = {
+          Destination: { 
+            ToAddresses: [
+              agent.parameters.email,
+            ]
+          },
+          Message: { 
+            Body: { /* required */
+              /*Html: {
+               Charset: "UTF-8",
+               Data: `<p>Obrigado pela compra na loja de minions! Os dados da sua compra estão aqui:</p><p id="output"></p><script></script> <p>Volte sempre!</p>`
+              },*/
+              Text: {
+               Charset: "UTF-8",
+               Data: "Obrigado pela compra na loja de minions! Aqui está o seu recibo: \n\nNúmero: "+ userChoice.num+ "\nNome: "+data.Item.name.S+"\nPreço: R$"+data.Item.price.N +",00 \n\nVolte sempre!" 
+              }
+             },
+             Subject: {
+              Charset: 'UTF-8',
+              Data: 'Loja de Minions - Compra efetuada com sucesso!'
+             }
+            },
+          Source: "marcelovalentino99@gmail.com", 
+          
+        };
+        var sendPromise = ses.sendEmail(emailParams).promise();
+        await sendPromise.then(
+          function(data){
+            console.log(data);
+            agent.add('Email enviado para ' + agent.parameters.email + '! Verifique seu email pelo comprovante.');
+          }).catch(
+          function(err){
+            console.error(err, err.stack);
+            agent.add('Falha no envio do email! Verifique se o mesmo está correto.')
           }
-         },
-         Subject: {
-          Charset: 'UTF-8',
-          Data: 'Loja de Minions - Compra efetuada com sucesso!'
-         }
-        },
-      Source: "marcelovalentino99@gmail.com", /* required */
-      
-    };
-    var sendPromise = ses.sendEmail(params).promise();
-    await sendPromise.then(
-      function(data){
-        console.log(data);
-        agent.add('Email enviado para ' + agent.parameters.email + '! Verifique seu email pelo comprovante.');
-      }).catch(
+        );
+      }
+    ).catch(
       function(err){
-        console.error(err, err.stack);
-        agent.add('Falha no envio do email! Verifique se o mesmo está correto.')
+        console.log("erro:\n"+err);
+        agent.end("Erro no BD!");
       }
     );
-    
   }
 
   function fallback(agent) {
     agent.add(`Não entendi o que você falou. Pode tentar de novo?`);
   }
-  // Run the proper function handler based on the matched Dialogflow intent name
+
   let intentMap = new Map();
   intentMap.set('minionSaleStart', minionWelcome);
   intentMap.set('Default Fallback Intent', fallback);
@@ -106,5 +154,6 @@ router.post('/', (request, response) => {
 });
 
 app.use('/', router);
+
 
 module.exports = app;
