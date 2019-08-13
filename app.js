@@ -9,8 +9,6 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const app = express();
 const router = express.Router();
 
-var database = require('./database');
-var sequelize = database.sequelize;
 
 var AWS = require('aws-sdk');
 

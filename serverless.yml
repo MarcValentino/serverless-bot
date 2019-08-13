@@ -48,3 +48,6 @@ layers:
     path: layer
     compatibleRuntimes:
       - nodejs10.x
+
+plugins:
+  - serverless-plugin-include-dependencies
