@@ -35,7 +35,15 @@ router.post('/', (request, response) => {
     }
     
     // Tentativa de pegar uma tabela já existente no dynamodb
-    dynamo.scan(params, function(err, data){
+    let scan = dynamo.scan(params).promise();
+    scan.then(
+      function(data, err){
+        if(err) console.log(err);
+        else{
+          agent.add(data.Items);
+        }
+      }
+    )
       //if(err) agent.end("Erro resgatando os minions disponíveis!");
       //else{
         /*let minionArray = data.Items;
@@ -48,7 +56,7 @@ router.post('/', (request, response) => {
         console.log('data :' +data);
         //agent.add(data);
       //}
-    });
+    
     agent.add("Bem vindo à loja de minions! Temos esses minions disponíveis: \n");
     
     
